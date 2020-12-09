@@ -2,7 +2,6 @@ using System;
 using MetricSystemRules.Controllers;
 using MetricSystemRules.Interfaces;
 using MetricSystemRules.Items;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Moq;
 using NUnit.Framework;
 
