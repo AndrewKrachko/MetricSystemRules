@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -71,21 +73,51 @@ namespace MetricSystemRules.Controllers
         [Route("ConvertCtoFToSpecificOutput")]
         public IActionResult ConvertCtoFToSpecificOutput([FromBody] TemperatureCtoFViewModel value, OutputType outputType)
         {
-
             try
             {
                 ConvertCtoFImplementation(value);
 
-                byte[] data = new UTF8Encoding(true).GetBytes($"Celsius temperature is {value.TemperatureMetric}/nThat corresponds to {value.TemperatureImperial} in Fahrenheit scale");
+                byte[] data = new UTF8Encoding(true).GetBytes(
+                    $"Celsius temperature: {value.TemperatureMetric}\nFahrenheit temperature: {value.TemperatureImperial}");
 
                 switch (outputType)
                 {
                     case OutputType.Int:
                         return Accepted((int)value.TemperatureImperial);
                     case OutputType.TxtFile:
+                        return File(data, System.Net.Mime.MediaTypeNames.Text.Plain, "result.txt");
+                    case OutputType.ZipFile:
 
-                        var url = CreateTxtFile(data);
-                        return File(data, System.Net.Mime.MediaTypeNames.Text.Plain);
+                        byte[] archiveFile;
+                        using (var archiveStream = new MemoryStream())
+                        {
+                            using (var archive = new ZipArchive(archiveStream, ZipArchiveMode.Create, true))
+                            {
+                                var zipArchiveEntry = archive.CreateEntry("result.txt", CompressionLevel.Fastest);
+                                using (var zipStream = zipArchiveEntry.Open())
+                                    zipStream.Write(data, 0, data.Length);
+                            }
+
+                            archiveFile = archiveStream.ToArray();
+                        }
+
+                        return File(archiveFile, System.Net.Mime.MediaTypeNames.Application.Zip, "result.zip");
+                    case OutputType.BinFile:
+                        if (System.IO.File.Exists("result.bin"))
+                        {
+                            System.IO.File.Delete("result.bin");
+                        }
+
+                        var fileStream = new FileStream("result.bin", FileMode.Create);
+                        using (var binaryStream = new BinaryWriter(fileStream, Encoding.ASCII))
+                        {
+                            binaryStream.Write("Celsius temperature: ");
+                            binaryStream.Write(value.TemperatureMetric);
+                            binaryStream.Write("\nFahrenheit temperature: ");
+                            binaryStream.Write(value.TemperatureImperial);
+                        }
+                        
+                        return File(new FileStream("result.bin", FileMode.Open), System.Net.Mime.MediaTypeNames.Application.Octet, "result.bin");
                     default:
                         this.ModelState.AddModelError("", "Unknown OutputType");
                         return BadRequest(this.ModelState);
