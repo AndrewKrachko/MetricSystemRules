@@ -22,7 +22,7 @@ namespace MetricSystemRules.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TemperatureCtoFController : ControllerBase
+    public class TemperatureCtoFController : Controller
     {
         private IConverterTemperature _converterTemperature;
 
@@ -128,16 +128,20 @@ namespace MetricSystemRules.Controllers
                 this.ModelState.AddModelError("", e.Message);
                 return BadRequest(this.ModelState);
             }
-
         }
 
-        private string CreateTxtFile(byte[] data)
+        [HttpGet]
+        [Route("CtoFView")]
+        public IActionResult CtoFView(double value = 0)
         {
-            var fileStream = System.IO.File.Create("result.txt");
-            fileStream.Write(data, 0, data.Length);
-            fileStream.Close();
+            var viewModel = new TemperatureCtoFViewModel()
+            {
+                TemperatureMetric = value
+            };
 
-            return fileStream.Name;
+            ConvertCtoFImplementation(viewModel);
+
+            return View(viewModel);
         }
     }
 }

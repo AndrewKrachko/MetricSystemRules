@@ -1,0 +1,17 @@
+﻿@model TemperatureCtoFViewModel
+@{
+    ViewData["Title"] = "Temperature converter";
+}
+<h2>Celsius to Fahrenheit converter</h2>
+
+<form method="get">
+    <div class="form-group">
+        <label>C°</label>
+        <input class="form-control" asp-for="TemperatureMetric" value="@Model.TemperatureMetric" name="value"/>
+    </div>
+    <div class="form-group">
+        <label>F°: </label>
+        <label>@Model.TemperatureImperial</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Convert</button>
+</form>
