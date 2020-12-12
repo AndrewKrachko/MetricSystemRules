@@ -38,7 +38,7 @@ namespace MetricSystemRules.Controllers
             switch (output)
             {
                 case FahrenheitTemperature fahrenheitTemperature:
-                    fahrenheitTemperature.SetValue(celsiusTemperature.Value / 1.8 + 32);
+                    fahrenheitTemperature.SetValue(celsiusTemperature.Value * 1.8 + 32);
                     break;
             }
         }

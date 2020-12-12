@@ -43,5 +43,41 @@ namespace Tests
             // Assert
             Assert.Throws<Exception>(() => converter.Convert(cT, fT));
         }
+
+        [Test]
+        public void Convert40CtoFTest()
+        {
+            // Arrange
+            var cT = new CelsiusTemperature(40);
+            var fT = new FahrenheitTemperature(0);
+            var validatorMock = new Mock<IValidator>();
+            validatorMock.Setup(s => s.Validate(It.IsAny<CelsiusTemperature>(), out It.Ref<string>.IsAny))
+                .Returns(true);
+            var converter = new ConverterService(validatorMock.Object);
+
+            // Act
+            converter.Convert(cT, fT);
+
+            // Assert
+            Assert.AreEqual(104, fT.Value);
+        }
+
+        [Test]
+        public void ConvertMinus20CtoFTest()
+        {
+            // Arrange
+            var cT = new CelsiusTemperature(-20);
+            var fT = new FahrenheitTemperature(0);
+            var validatorMock = new Mock<IValidator>();
+            validatorMock.Setup(s => s.Validate(It.IsAny<CelsiusTemperature>(), out It.Ref<string>.IsAny))
+                .Returns(true);
+            var converter = new ConverterService(validatorMock.Object);
+
+            // Act
+            converter.Convert(cT, fT);
+
+            // Assert
+            Assert.AreEqual(-4, fT.Value);
+        }
     }
 }
