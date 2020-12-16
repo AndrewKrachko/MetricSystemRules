@@ -87,36 +87,9 @@ namespace MetricSystemRules.Controllers
                     case OutputType.TxtFile:
                         return File(data, System.Net.Mime.MediaTypeNames.Text.Plain, "result.txt");
                     case OutputType.ZipFile:
-
-                        byte[] archiveFile;
-                        using (var archiveStream = new MemoryStream())
-                        {
-                            using (var archive = new ZipArchive(archiveStream, ZipArchiveMode.Create, true))
-                            {
-                                var zipArchiveEntry = archive.CreateEntry("result.txt", CompressionLevel.Fastest);
-                                using (var zipStream = zipArchiveEntry.Open())
-                                    zipStream.Write(data, 0, data.Length);
-                            }
-
-                            archiveFile = archiveStream.ToArray();
-                        }
-
-                        return File(archiveFile, System.Net.Mime.MediaTypeNames.Application.Zip, "result.zip");
+                        return File(GenerateZipByteArray(data), System.Net.Mime.MediaTypeNames.Application.Zip, "result.zip");
                     case OutputType.BinFile:
-                        if (System.IO.File.Exists("result.bin"))
-                        {
-                            System.IO.File.Delete("result.bin");
-                        }
-
-                        var fileStream = new FileStream("result.bin", FileMode.Create);
-                        using (var binaryStream = new BinaryWriter(fileStream, Encoding.ASCII))
-                        {
-                            binaryStream.Write("Celsius temperature: ");
-                            binaryStream.Write(value.TemperatureMetric);
-                            binaryStream.Write("\nFahrenheit temperature: ");
-                            binaryStream.Write(value.TemperatureImperial);
-                        }
-                        
+                        GenerateBinFile(value);
                         return File(new FileStream("result.bin", FileMode.Open), System.Net.Mime.MediaTypeNames.Application.Octet, "result.bin");
                     default:
                         this.ModelState.AddModelError("", "Unknown OutputType");
@@ -127,6 +100,38 @@ namespace MetricSystemRules.Controllers
             {
                 this.ModelState.AddModelError("", e.Message);
                 return BadRequest(this.ModelState);
+            }
+        }
+
+        private static void GenerateBinFile(TemperatureCtoFViewModel value)
+        {
+            if (System.IO.File.Exists("result.bin"))
+            {
+                System.IO.File.Delete("result.bin");
+            }
+
+            var fileStream = new FileStream("result.bin", FileMode.Create);
+            using (var binaryStream = new BinaryWriter(fileStream, Encoding.ASCII))
+            {
+                binaryStream.Write("Celsius temperature: ");
+                binaryStream.Write(value.TemperatureMetric);
+                binaryStream.Write("\nFahrenheit temperature: ");
+                binaryStream.Write(value.TemperatureImperial);
+            }
+        }
+
+        private byte[] GenerateZipByteArray(byte[] data)
+        {
+            using (var archiveStream = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(archiveStream, ZipArchiveMode.Create, true))
+                {
+                    var zipArchiveEntry = archive.CreateEntry("result.txt", CompressionLevel.Fastest);
+                    using (var zipStream = zipArchiveEntry.Open())
+                        zipStream.Write(data, 0, data.Length);
+                }
+
+                return archiveStream.ToArray();
             }
         }
 
