@@ -1,22 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using MetricSystemRules.Enums;
 using MetricSystemRules.Interfaces;
 using MetricSystemRules.Items;
 using MetricSystemRules.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MetricSystemRules.Controllers
 {
@@ -26,9 +16,9 @@ namespace MetricSystemRules.Controllers
     {
         private IConverterTemperature _converterTemperature;
 
-        public TemperatureCtoFController()
+        public TemperatureCtoFController(IConverterTemperature converter, IValidator validator)
         {
-            _converterTemperature = new ConverterService(new ValidatorService());
+            _converterTemperature = converter;
         }
 
         private void ConvertCtoFImplementation(TemperatureCtoFViewModel value)
@@ -139,14 +129,23 @@ namespace MetricSystemRules.Controllers
         [Route("CtoFView")]
         public IActionResult CtoFView(double value = 0)
         {
-            var viewModel = new TemperatureCtoFViewModel()
+            try
             {
-                TemperatureMetric = value
-            };
+                var viewModel = new TemperatureCtoFViewModel()
+                {
+                    TemperatureMetric = value
+                };
 
-            ConvertCtoFImplementation(viewModel);
+                ConvertCtoFImplementation(viewModel);
 
-            return View(viewModel);
+                return View(viewModel);
+            }
+            catch (Exception e)
+            {
+                this.ModelState.AddModelError("", e.Message);
+                return BadRequest(this.ModelState);
+            }
+
         }
     }
 }
