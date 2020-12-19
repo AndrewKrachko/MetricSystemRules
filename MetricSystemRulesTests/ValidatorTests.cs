@@ -2,85 +2,42 @@
 using MetricSystemRules.Items;
 using NUnit.Framework;
 
-namespace Tests
+namespace MetricSystemRulesTests
 {
     [TestFixture]
     public class ValidatorTests
     {
-        [Test]
-        public void CheckMaxCelsiusTemperature()
+        [TestCase(double.MaxValue, true, "")]
+        [TestCase(0.5 * (double.MaxValue - 273.16), true, "")]
+        [TestCase(-273.16, true, "")]
+        public void CheckMaxCelsiusTemperature(double cValue, bool expectedResult, string expectedMessage)
         {
             // Arrange
-            var cT = new CelsiusTemperature(double.MaxValue);
+            var cT = new CelsiusTemperature(cValue);
             var sut = new ValidatorService();
 
             // Act 
-            var result = sut.Validate(cT, out string message);
+            var result = sut.Validate(cT, out var message);
 
             // Assert
-            Assert.AreEqual(true, result);
-            Assert.AreEqual("", message);
+            Assert.AreEqual(expectedResult, result);
+            Assert.AreEqual(expectedMessage, message);
         }
 
-        [Test]
-        public void CheckMidCelsiusTemperature()
+        [TestCase(-273.16 - 1e-12, false, "Temperature must be not lower than")]
+        [TestCase(double.NaN, false, "Temperature is not defined.")]
+        public void CheckInvalidMinCelsiusTemperature(double cValue, bool expectedResult, string expectedMessage)
         {
             // Arrange
-            var cT = new CelsiusTemperature(0.5 * (double.MaxValue - 273.16));
+            var cT = new CelsiusTemperature(cValue);
             var sut = new ValidatorService();
 
             // Act 
-            var result = sut.Validate(cT, out string message);
+            var result = sut.Validate(cT, out var message);
 
             // Assert
-            Assert.AreEqual(true, result);
-            Assert.AreEqual("", message);
+            Assert.AreEqual(expectedResult, result);
+            Assert.IsTrue(message.Contains(expectedMessage));
         }
-
-        [Test]
-        public void CheckMinCelsiusTemperature()
-        {
-            // Arrange
-            var cT = new CelsiusTemperature(-273.16);
-            var sut = new ValidatorService();
-
-            // Act 
-            var result = sut.Validate(cT, out string message);
-
-            // Assert
-            Assert.AreEqual(true, result);
-            Assert.AreEqual("", message);
-        }
-
-        [Test]
-        public void CheckInvalidMinCelsiusTemperature()
-        {
-            // Arrange
-            var cT = new CelsiusTemperature(-273.16 - 1e-12);
-            var sut = new ValidatorService();
-
-            // Act 
-            var result = sut.Validate(cT, out string message);
-
-            // Assert
-            Assert.AreEqual(false, result);
-            Assert.IsTrue(message.Contains("Temperature must be not lower than"));
-        }
-
-        [Test]
-        public void CheckNullCelsiusTemperature()
-        {
-            // Arrange
-            var cT = new CelsiusTemperature(double.NaN);
-            var sut = new ValidatorService();
-
-            // Act 
-            var result = sut.Validate(cT, out string message);
-
-            // Assert
-            Assert.AreEqual(false, result);
-            Assert.IsTrue(message.Contains("Temperature is not defined."));
-        }
-
     }
 }
