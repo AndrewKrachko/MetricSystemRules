@@ -8,7 +8,6 @@ using MetricSystemRules.Models;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
-using TypeMock.ArrangeActAssert;
 
 namespace MetricSystemRulesTests
 {
@@ -43,8 +42,7 @@ namespace MetricSystemRulesTests
                 .Throws(new Exception(""));
 
             var controller = new TemperatureCtoFController(converterMock.Object);
-            Isolate.WhenCalled(() => controller.ModelState.IsValid).WillReturn(true);
-            Isolate.WhenCalled(() => controller.ModelState.AddModelError("", "")).IgnoreCall();
+            controller.ModelState.AddModelError("", "Unsupported type of unit:");
 
             // Act
             var result = controller.ConvertCtoF((TemperatureCtoFViewModel)_tepmeratureCtoFViewModelMock.Object);
