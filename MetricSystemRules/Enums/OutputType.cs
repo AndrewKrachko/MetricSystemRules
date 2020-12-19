@@ -7,7 +7,6 @@ namespace MetricSystemRules.Enums
 {
     public enum OutputType
     {
-        Int,
         TxtFile,
         ZipFile,
         BinFile

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.IO.Pipes;
 using System.Text;
 using MetricSystemRules.Enums;
 using MetricSystemRules.Interfaces;
@@ -14,9 +15,9 @@ namespace MetricSystemRules.Controllers
     [ApiController]
     public class TemperatureCtoFController : Controller
     {
-        private IConverterTemperature _converterTemperature;
+        private readonly IConverterTemperature _converterTemperature;
 
-        public TemperatureCtoFController(IConverterTemperature converter, IValidator validator)
+        public TemperatureCtoFController(IConverterTemperature converter)
         {
             _converterTemperature = converter;
         }
@@ -59,28 +60,29 @@ namespace MetricSystemRules.Controllers
             return RedirectPermanent("https://it-academy.by");
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route("ConvertCtoFToSpecificOutput")]
-        public IActionResult ConvertCtoFToSpecificOutput([FromBody] TemperatureCtoFViewModel value, OutputType outputType)
+        public IActionResult ConvertCtoFToSpecificOutput(int value, OutputType outputType)
         {
             try
             {
-                ConvertCtoFImplementation(value);
+                var cToFView = new TemperatureCtoFViewModel();
+                ConvertCtoFImplementation(cToFView);
 
                 byte[] data = new UTF8Encoding(true).GetBytes(
-                    $"Celsius temperature: {value.TemperatureMetric}\nFahrenheit temperature: {value.TemperatureImperial}");
+                    $"Celsius temperature: {cToFView.TemperatureMetric}\nFahrenheit temperature: {cToFView.TemperatureImperial}");
 
                 switch (outputType)
                 {
-                    case OutputType.Int:
-                        return Accepted((int)value.TemperatureImperial);
                     case OutputType.TxtFile:
                         return File(data, System.Net.Mime.MediaTypeNames.Text.Plain, "result.txt");
                     case OutputType.ZipFile:
-                        return File(GenerateZipByteArray(data), System.Net.Mime.MediaTypeNames.Application.Zip, "result.zip");
+                        return File(GenerateZipByteArray(data), System.Net.Mime.MediaTypeNames.Application.Zip,
+                            "result.zip");
                     case OutputType.BinFile:
-                        GenerateBinFile(value);
-                        return File(new FileStream("result.bin", FileMode.Open), System.Net.Mime.MediaTypeNames.Application.Octet, "result.bin");
+                        GenerateBinFile(cToFView);
+                        return File(new FileStream("result.bin", FileMode.Open),
+                            System.Net.Mime.MediaTypeNames.Application.Octet, "result.bin");
                     default:
                         this.ModelState.AddModelError("", "Unknown OutputType");
                         return BadRequest(this.ModelState);
@@ -116,7 +118,7 @@ namespace MetricSystemRules.Controllers
             {
                 using (var archive = new ZipArchive(archiveStream, ZipArchiveMode.Create, true))
                 {
-                    var zipArchiveEntry = archive.CreateEntry("result.txt", CompressionLevel.Fastest);
+                    var zipArchiveEntry = archive.CreateEntry("result.txt", CompressionLevel.Optimal);
                     using (var zipStream = zipArchiveEntry.Open())
                         zipStream.Write(data, 0, data.Length);
                 }
@@ -145,7 +147,6 @@ namespace MetricSystemRules.Controllers
                 this.ModelState.AddModelError("", e.Message);
                 return BadRequest(this.ModelState);
             }
-
         }
     }
 }

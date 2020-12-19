@@ -7,7 +7,7 @@ namespace MetricSystemRules.Controllers
 {
     public class ConverterService : IConverterTemperature
     {
-        private IValidator _validator;
+        private readonly IValidator _validator;
 
         public ConverterService(IValidator validator)
         {
