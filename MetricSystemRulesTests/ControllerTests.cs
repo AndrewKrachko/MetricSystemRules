@@ -48,7 +48,7 @@ namespace MetricSystemRulesTests
             var result = controller.ConvertCtoF((TemperatureCtoFViewModel)_tepmeratureCtoFViewModelMock.Object);
 
             // Assert
-            Assert.AreEqual(404, ((AcceptedResult)result).StatusCode);
+            Assert.AreEqual(400, ((BadRequestObjectResult)result).StatusCode);
         }
 
         [Test]
@@ -123,6 +123,41 @@ namespace MetricSystemRulesTests
             // Assert
             Assert.AreEqual(resultMediaTypeNames, ((FileStreamResult)result).ContentType);
             Assert.AreEqual(fileName, ((FileStreamResult)result).FileDownloadName);
+        }
+
+        [Test]
+        public void ControllerConvertCtoFToSpecificOutputNegativeTest()
+        {
+            // Arrange
+            var converterMock = new Mock<IConverterTemperature>();
+            converterMock.Setup(s => s.Convert(It.IsAny<ITemperature>(), It.IsAny<ITemperature>()))
+                .Throws(new Exception(""));
+
+            var controller = new TemperatureCtoFController(converterMock.Object);
+            controller.ModelState.AddModelError("", "Unsupported type of unit:");
+
+            // Act
+            var result = controller.ConvertCtoFToSpecificOutput(-1000, OutputType.TxtFile);
+
+            // Assert
+            Assert.AreEqual(400, ((BadRequestObjectResult)result).StatusCode);
+        }
+
+        [Test]
+        public void ControllerCtoFViewTest()
+        {
+            // Arrange
+            var converterMock = new Mock<IConverterTemperature>();
+            converterMock.Setup(s => s.Convert(It.IsAny<ITemperature>(), It.IsAny<ITemperature>()))
+                .Returns(true);
+
+            var controller = new TemperatureCtoFController(converterMock.Object);
+
+            // Act
+            var result = controller.CtoFView(0);
+
+            // Assert
+            Assert.AreEqual(0, ((TemperatureCtoFViewModel)((ViewResult)result).Model).TemperatureImperial);
         }
     }
 }
